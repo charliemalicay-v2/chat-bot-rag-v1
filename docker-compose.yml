@@ -1,9 +1,9 @@
 # Chat RAG Bot V1 - Docker Compose
 #
-# Phase 0: the two database containers only.
-#   db      MySQL 8.4            conversations, messages, products
-#   vector  PostgreSQL + pgvector document chunks + embeddings
-# Phase 1 adds `backend` (Django + Ollama); Phase 6 optionally adds `frontend`.
+#   db       MySQL 8.4             conversations, messages, products
+#   vector   PostgreSQL + pgvector document chunks + embeddings
+#   backend  Django REST API (Ollama + embedder are added to this container)
+# The `frontend` service is added in Phase 6.
 #
 # Setup: cp .env.example .env   (compose reads .env for ${VAR} substitution)
 
@@ -27,6 +27,8 @@ services:
       - "127.0.0.1:${MYSQL_HOST_PORT:-3307}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+      # Runs once, on first start of an empty volume (grants test-DB rights).
+      - ./db/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
       interval: 5s
@@ -55,6 +57,27 @@ services:
       timeout: 5s
       retries: 20
       start_period: 10s
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # Let the frontend container reach the API as http://backend:8000
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1},backend
+    depends_on:
+      db:
+        condition: service_healthy
+      vector:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8000/api/health/ >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 30s
 
 volumes:
   mysql_data:
