@@ -1,0 +1,5 @@
+# Shell scripts run inside Linux containers; CRLF breaks the shebang.
+*.sh text eol=lf
+docker-entrypoint.sh text eol=lf
+*.sql text eol=lf
+Dockerfile text eol=lf

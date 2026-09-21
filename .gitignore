@@ -216,3 +216,15 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# --- Chat RAG Bot monorepo ---
+# Frontend (Next.js)
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/next-env.d.ts
+# Backend model caches / local data
+backend/.cache/
+*.log
+# Claude Code local settings
+.claude/settings.local.json
