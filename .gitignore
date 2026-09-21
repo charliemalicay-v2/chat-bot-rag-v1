@@ -228,3 +228,6 @@ backend/.cache/
 *.log
 # Claude Code local settings
 .claude/settings.local.json
+
+# Playwright MCP session artifacts
+.playwright-mcp/
