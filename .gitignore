@@ -231,3 +231,6 @@ backend/.cache/
 
 # Playwright MCP session artifacts
 .playwright-mcp/
+
+# The Python template above ignores every lib/ directory; the frontend source lives in frontend/src/lib/
+!frontend/src/lib/
