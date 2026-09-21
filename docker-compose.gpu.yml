@@ -1,0 +1,21 @@
+# Optional NVIDIA GPU support for the in-container Ollama.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d --build
+#
+# Needs an NVIDIA GPU, current drivers and the NVIDIA Container Toolkit (on Windows:
+# Docker Desktop with the WSL2 backend). NOT tested in this repo's development
+# environment (CPU only). The default build strips the CUDA libraries to keep the
+# image small (~1 GB instead of ~9 GB); KEEP_GPU_LIBS keeps them.
+services:
+  backend:
+    build:
+      context: ./backend
+      args:
+        KEEP_GPU_LIBS: "1"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

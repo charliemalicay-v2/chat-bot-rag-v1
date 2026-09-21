@@ -2,7 +2,7 @@
 # commands directly.
 COMPOSE ?= docker compose
 
-.PHONY: env up down ps logs psql mysql check-vector ingest test reset
+.PHONY: env up down ps logs psql mysql check-vector ingest test test-frontend smoke reset
 
 env:
 	@test -f .env || cp .env.example .env
@@ -37,6 +37,13 @@ ingest:
 # Runs the backend tests inside the container (rebuild first if you changed code: make up).
 test:
 	$(COMPOSE) exec backend python -m pytest -q
+
+test-frontend:
+	cd frontend && npm test
+
+# End-to-end check of the running stack (real model; waits for first-start downloads).
+smoke:
+	python scripts/smoke_test.py --wait 900
 
 # DESTROYS all data in both databases.
 reset:

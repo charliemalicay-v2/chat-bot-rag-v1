@@ -1,7 +1,7 @@
-# Shell scripts run inside Linux containers; CRLF breaks the shebang.
-*.sh text eol=lf
-docker-entrypoint.sh text eol=lf
-*.sql text eol=lf
-Dockerfile text eol=lf
-Makefile text eol=lf
-*.yml text eol=lf
+# Normalise to LF everywhere. Windows checkouts would otherwise get CRLF, which breaks
+# shell scripts and Dockerfiles that run inside Linux containers.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff2 binary

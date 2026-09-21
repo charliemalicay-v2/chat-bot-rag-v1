@@ -3,7 +3,7 @@
 #   db       MySQL 8.4             conversations, messages, products
 #   vector   PostgreSQL + pgvector document chunks + embeddings
 #   backend  Django REST API (Ollama + embedder are added to this container)
-# The `frontend` service is added in Phase 6.
+#   frontend Next.js UI, proxies /api/* to the backend
 #
 # Setup: cp .env.example .env   (compose reads .env for ${VAR} substitution)
 
@@ -59,7 +59,8 @@ services:
       start_period: 10s
 
   backend:
-    build: ./backend
+    build:
+      context: ./backend
     restart: unless-stopped
     init: true   # tini as PID 1: reaps the ollama child, forwards signals
     env_file: .env
@@ -84,6 +85,24 @@ services:
       timeout: 10s
       retries: 30
       start_period: 30s
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    environment:
+      # Read at request time by the Next.js /api proxy.
+      BACKEND_URL: http://backend:8000
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:3000:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/ >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
 
 volumes:
   mysql_data:
