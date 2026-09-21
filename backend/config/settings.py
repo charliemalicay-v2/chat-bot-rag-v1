@@ -78,10 +78,19 @@ OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.2:3b")
 OLLAMA_NUM_CTX = int(os.environ.get("OLLAMA_NUM_CTX", "4096"))
 OLLAMA_TEMPERATURE = float(os.environ.get("OLLAMA_TEMPERATURE", "0.2"))
+EMBEDDING_PROVIDER = os.environ.get("EMBEDDING_PROVIDER", "huggingface")  # huggingface | fake
 EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5")
+# None = auto (BGE models get their retrieval instruction); "" = no prefix.
+EMBEDDING_QUERY_PREFIX = os.environ.get("EMBEDDING_QUERY_PREFIX")
+CHUNK_WORDS = int(os.environ.get("CHUNK_WORDS", "200"))
+CHUNK_OVERLAP_WORDS = int(os.environ.get("CHUNK_OVERLAP_WORDS", "40"))
 EMBEDDING_DIM = int(os.environ.get("EMBEDDING_DIM", "384"))
 RAG_TOP_K = int(os.environ.get("RAG_TOP_K", "4"))
 RAG_HISTORY_TURNS = int(os.environ.get("RAG_HISTORY_TURNS", "6"))
+# Chunks farther than this (cosine distance) are treated as "not relevant". Measured with
+# bge-small-en-v1.5 on the sample docs: on-topic 0.18-0.41, off-topic 0.48-0.58. Re-tune if
+# you change the embedding model or the documents.
+RAG_MAX_DISTANCE = float(os.environ.get("RAG_MAX_DISTANCE", "0.45"))
 
 LOGGING = {
     "version": 1,

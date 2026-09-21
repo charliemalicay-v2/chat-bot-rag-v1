@@ -22,7 +22,9 @@ FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1
+    PIP_NO_CACHE_DIR=1 \
+    HF_HUB_DISABLE_TELEMETRY=1 \
+    TOKENIZERS_PARALLELISM=false
 
 # build-essential, pkg-config, libmysqlclient-dev: build mysqlclient.
 # curl: healthchecks and the entrypoint's wait loop.
@@ -35,6 +37,10 @@ COPY --from=ollama-src /out/ollama /usr/bin/ollama
 COPY --from=ollama-src /out/lib /usr/lib/ollama
 
 WORKDIR /app
+
+# CPU-only PyTorch (the default PyPI wheel drags in ~2 GB of CUDA libraries).
+# Its own layer so it is cached across requirements changes.
+RUN pip install torch --index-url https://download.pytorch.org/whl/cpu
 
 COPY requirements.txt .
 RUN pip install -r requirements.txt

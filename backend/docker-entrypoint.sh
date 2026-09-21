@@ -64,4 +64,13 @@ else
   echo "[entrypoint] LLM_PROVIDER=${LLM_PROVIDER}; ollama not started"
 fi
 
+# --- Embedding model (Hugging Face) -----------------------------------------
+# Download/load it in the background so the first ingest or chat is not slow.
+if [ "${EMBEDDING_PROVIDER:-huggingface}" = "huggingface" ]; then
+  (
+    echo "[embedder] preparing ${EMBEDDING_MODEL:-BAAI/bge-small-en-v1.5} (first start downloads it)"
+    python manage.py warm_models || echo "[embedder] warm-up FAILED - check the model name and network"
+  ) &
+fi
+
 exec "$@"

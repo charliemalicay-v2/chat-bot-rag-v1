@@ -46,10 +46,41 @@ def check_llm():
     return True, f"ollama model {settings.OLLAMA_MODEL} ready"
 
 
+def check_embedder():
+    if settings.EMBEDDING_PROVIDER != "huggingface":
+        return True, f"{settings.EMBEDDING_PROVIDER} embedder (no download needed)"
+    try:
+        from huggingface_hub import snapshot_download
+
+        snapshot_download(settings.EMBEDDING_MODEL, local_files_only=True)
+    except Exception:  # noqa: BLE001 - not in the local cache (yet)
+        return False, f"embedding model {settings.EMBEDDING_MODEL} not downloaded yet (first start fetches it; watch the backend logs)"
+    return True, f"embedding model {settings.EMBEDDING_MODEL} cached"
+
+
+def check_index():
+    """Informational: how many chunks the active embedding model can search."""
+    from rag.embedder import active_model_name
+    from rag.models import DocumentChunk
+
+    try:
+        total = DocumentChunk.objects.count()
+        usable = DocumentChunk.objects.filter(embedding_model=active_model_name()).count()
+    except Exception as exc:  # noqa: BLE001
+        return False, str(exc)
+    if total == 0:
+        return True, "0 chunks indexed - run: python manage.py ingest_documents"
+    if usable == 0:
+        return True, f"{total} chunks exist but none from {active_model_name()} - re-run ingest_documents --reset"
+    return True, f"{usable} chunks indexed"
+
+
 CHECKS = {
     "mysql": check_mysql,
     "vector_db": check_vector_db,
     "llm": check_llm,
+    "embedder": check_embedder,
+    "index": check_index,
 }
 
 

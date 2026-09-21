@@ -74,7 +74,8 @@ services:
     ports:
       - "127.0.0.1:8000:8000"
     volumes:
-      - ollama_models:/root/.ollama   # downloaded LLM weights
+      - ollama_models:/root/.ollama            # downloaded LLM weights
+      - hf_cache:/root/.cache/huggingface      # downloaded embedding model
     healthcheck:
       # /live only proves Django is up. The first-start model download keeps
       # going in the background; GET /api/health/ shows when the LLM is ready.
@@ -88,3 +89,4 @@ volumes:
   mysql_data:
   pg_data:
   ollama_models:
+  hf_cache:
