@@ -1,6 +1,10 @@
 """Dependency checks behind GET /api/health/. Each check returns (ok, detail)."""
 
+import httpx
+from django.conf import settings
 from django.db import connections
+
+from rag.llm import normalize_host
 
 
 def check_mysql():
@@ -24,9 +28,28 @@ def check_vector_db():
         return False, str(exc)
 
 
+def check_llm():
+    if settings.LLM_PROVIDER != "ollama":
+        return True, f"{settings.LLM_PROVIDER} provider (no server needed)"
+    base = normalize_host(settings.OLLAMA_HOST)
+    try:
+        resp = httpx.get(f"{base}/api/tags", timeout=3.0)
+        resp.raise_for_status()
+        names = {m.get("name") for m in resp.json().get("models", [])}
+    except Exception as exc:  # noqa: BLE001
+        return False, f"ollama not reachable at {base}: {exc}"
+    wanted = settings.OLLAMA_MODEL
+    if ":" not in wanted:
+        wanted += ":latest"
+    if wanted not in names:
+        return False, f"model {settings.OLLAMA_MODEL} not available yet (first start pulls it; watch the backend logs)"
+    return True, f"ollama model {settings.OLLAMA_MODEL} ready"
+
+
 CHECKS = {
     "mysql": check_mysql,
     "vector_db": check_vector_db,
+    "llm": check_llm,
 }
 
 

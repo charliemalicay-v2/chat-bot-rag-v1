@@ -61,6 +61,7 @@ services:
   backend:
     build: ./backend
     restart: unless-stopped
+    init: true   # tini as PID 1: reaps the ollama child, forwards signals
     env_file: .env
     environment:
       # Let the frontend container reach the API as http://backend:8000
@@ -72,8 +73,12 @@ services:
         condition: service_healthy
     ports:
       - "127.0.0.1:8000:8000"
+    volumes:
+      - ollama_models:/root/.ollama   # downloaded LLM weights
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8000/api/health/ >/dev/null || exit 1"]
+      # /live only proves Django is up. The first-start model download keeps
+      # going in the background; GET /api/health/ shows when the LLM is ready.
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8000/api/health/live/ >/dev/null || exit 1"]
       interval: 10s
       timeout: 10s
       retries: 30
@@ -82,3 +87,4 @@ services:
 volumes:
   mysql_data:
   pg_data:
+  ollama_models:

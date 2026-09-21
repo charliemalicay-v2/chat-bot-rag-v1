@@ -5,6 +5,12 @@ from . import health as health_checks
 
 
 @api_view(["GET"])
+def live(request):
+    """Process is up. Used by the container healthcheck (does not wait for the model pull)."""
+    return Response({"status": "alive"})
+
+
+@api_view(["GET"])
 def health(request):
     results = health_checks.run_checks()
     ok = all(r["ok"] for r in results.values())
