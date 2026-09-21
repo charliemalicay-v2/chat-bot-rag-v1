@@ -94,9 +94,13 @@ def _build(provider: str, model_name: str):
     raise EmbeddingConfigError(f"Unknown EMBEDDING_PROVIDER {provider!r} (expected 'huggingface' or 'fake')")
 
 
+_build_lock = threading.Lock()
+
+
 def get_embedder():
     """Process-wide singleton per (provider, model). Validates the vector size."""
-    embedder = _build(settings.EMBEDDING_PROVIDER, settings.EMBEDDING_MODEL)
+    with _build_lock:  # lru_cache does not serialise construction; loading twice would double the RAM
+        embedder = _build(settings.EMBEDDING_PROVIDER, settings.EMBEDDING_MODEL)
     if embedder.dim != settings.EMBEDDING_DIM:
         raise EmbeddingConfigError(
             f"{embedder.model_name} produces {embedder.dim}-dim vectors but the database column is "

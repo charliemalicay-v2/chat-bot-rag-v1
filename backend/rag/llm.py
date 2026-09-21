@@ -96,6 +96,8 @@ class FakeProvider:
         self.calls.append(messages)
         question = next((m["content"] for m in reversed(messages) if m["role"] == "user"), "")
         text = self.reply if self.reply is not None else f"[fake] You asked: {question}"
+        if not text:
+            return
         for i, word in enumerate(text.split(" ")):
             if self.fail_after is not None and i >= self.fail_after:
                 raise LLMError("fake provider failure")
